@@ -20,4 +20,4 @@ It is possible that including the angle between the fingers might improve result
 You can use ./train to add additional examples.
 
 
-[Derived from](https://www.youtube.com/watch?v=ee29JMl41Mc)
+Derived from [Rock paper scissors using #mediapipe and #streamlit python](https://www.youtube.com/watch?v=ee29JMl41Mc)
