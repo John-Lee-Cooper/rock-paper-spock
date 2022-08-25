@@ -18,3 +18,6 @@ The dataset includes 10 examples of each of the five gestures.
 For each gesture the angle between the joints (starting with the wrist) on each finger is saved (5*3).
 It is possible that including the angle between the fingers might improve results (paper vs spock).
 You can use ./train to add additional examples.
+
+
+[Derived from](https://www.youtube.com/watch?v=ee29JMl41Mc)
