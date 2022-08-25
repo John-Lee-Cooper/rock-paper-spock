@@ -9,14 +9,14 @@ import typing as t
 from enum import auto
 
 import cv2
-import numpy as np
 import mediapipe as mp
+import numpy as np
 import streamlit as st
 from strenum import StrEnum  # pip install StrEnum
 
-
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Rock, paper, scissor, lizard, spock
+
 
 class Gesture(StrEnum):
     rock = auto()
@@ -25,18 +25,20 @@ class Gesture(StrEnum):
     lizard = auto()
     spock = auto()
 
+
 _VERB = {
-    (Gesture.rock,     Gesture.scissors) : "crushes",
-    (Gesture.rock,     Gesture.lizard  ) : "crushes",
-    (Gesture.paper,    Gesture.rock    ) : "covers",
-    (Gesture.paper,    Gesture.spock   ) : "disproves",
-    (Gesture.scissors, Gesture.paper   ) : "cuts",
-    (Gesture.scissors, Gesture.lizard  ) : "decapitates",
-    (Gesture.lizard,   Gesture.paper   ) : "eats",
-    (Gesture.lizard,   Gesture.spock   ) : "poisons",
-    (Gesture.spock,    Gesture.rock    ) : "vaporizes",
-    (Gesture.spock,    Gesture.scissors) : "smashes",
+    (Gesture.rock, Gesture.scissors): "crushes",
+    (Gesture.rock, Gesture.lizard): "crushes",
+    (Gesture.paper, Gesture.rock): "covers",
+    (Gesture.paper, Gesture.spock): "disproves",
+    (Gesture.scissors, Gesture.paper): "cuts",
+    (Gesture.scissors, Gesture.lizard): "decapitates",
+    (Gesture.lizard, Gesture.paper): "eats",
+    (Gesture.lizard, Gesture.spock): "poisons",
+    (Gesture.spock, Gesture.rock): "vaporizes",
+    (Gesture.spock, Gesture.scissors): "smashes",
 }
+
 
 def evaluate(gesture1: Gesture, gesture2: Gesture) -> t.Tuple[t.Optional[int], str]:
     """Return winner index and text"""
@@ -47,30 +49,41 @@ def evaluate(gesture1: Gesture, gesture2: Gesture) -> t.Tuple[t.Optional[int], s
         return 1, f"{gesture2} {_VERB[gesture2, gesture1]} {gesture1}"
     return None, "Tie"
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # Open CV
 
 CAMERA = 0
 
+PREV_TIME = 0
+
+FONT = cv2.FONT_HERSHEY_PLAIN
 FONT = cv2.FONT_HERSHEY_SIMPLEX
-FONT2 = cv2.FONT_HERSHEY_PLAIN
 
 WHITE = 255, 255, 255
 GREEN = 0, 255, 0
 RED = 255, 0, 0
 
-def put_text(image, text, org, color, font_face=FONT, font_scale=2, thickness=3):
-    cv2.putText(image, text=text, org=org,
-        fontFace=font_face, fontScale=font_scale, color=color, thickness=thickness)
 
-prev_time = 0
+def put_text(image, text, org, color, font_face=FONT, font_scale=2, thickness=3):
+    cv2.putText(
+        image,
+        text=text,
+        org=org,
+        fontFace=font_face,
+        fontScale=font_scale,
+        color=color,
+        thickness=thickness,
+    )
+
+
 def frame_rate(image, pt=(10, 70), color=GREEN):
     """TODO"""
-    global prev_time
+    global PREV_TIME
     curr_time = time.time()
-    fps = 1 // (curr_time - prev_time)
-    prev_time = curr_time
-    put_text(image, str(fps), pt, color, font_face=FONT2, font_scale=3)
+    fps = 1 // (curr_time - PREV_TIME)
+    PREV_TIME = curr_time
+    put_text(image, str(fps), pt, color)
 
 
 def image_generator():
@@ -84,7 +97,8 @@ def image_generator():
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
         yield image
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # Machine Learning
 class KNN:
     def __init__(self, k: int, dataset_path: str, response_dict=None):
@@ -99,30 +113,33 @@ class KNN:
         self.response_dict = response_dict
 
     def find_nearest(self, data):
-        ret, results, neighbours, dist = self.knn.findNearest(data, self.k)
+        # ret, results, neighbours, dist
+        _, results, _, _ = self.knn.findNearest(data, self.k)
         response = int(results[0][0])
         if self.response_dict:
             return self.response_dict.get(response)
         return response
 
-#------------------------------------------------------------------------------
+
+# ------------------------------------------------------------------------------
 # Hands
 
 mp_draw = mp.solutions.drawing_utils
 mp_hands = mp.solutions.hands
 
+
 def joint_angles(landmark):
-    joint = np.array([ (lm.x, lm.y, lm.z) for lm in landmark ])
+    joint = np.array([(lm.x, lm.y, lm.z) for lm in landmark])
 
     # Compute angles between joints
 
     # thumb, index, middle, ring, pinky
-    parent_index = [ 0, 1, 2, 3,  0, 5, 6, 7,  0,  9, 10, 11,   0, 13, 14, 15,   0, 17, 18, 19]
+    parent_index = [0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0, 17, 18, 19]
     child_index =  [ 1, 2, 3, 4,  5, 6, 7, 8,  9, 10, 11, 12,  13, 14, 15, 16,  17, 18, 19, 20]
-    segment1 = [0, 1, 2,  4, 5, 6,  8,  9, 10,  12, 13, 14,  16, 17, 18]
-    segment2 = [1, 2, 3,  5, 6, 7,  9, 10, 11,  13, 14, 15,  17, 18, 19]
+    segment1 = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18]
+    segment2 = [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19]
 
-    v = joint[ child_index, :] - joint[ parent_index, :]
+    v = joint[child_index, :] - joint[parent_index, :]
 
     # Normalize v
     v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
@@ -135,7 +152,7 @@ def joint_angles(landmark):
     return data
 
 
-class HandDetector: # KNN
+class HandDetector:  # KNN
     """TODO"""
 
     def __init__(
@@ -163,8 +180,12 @@ class HandDetector: # KNN
 
     def draw_hand(self, image, hand_result):
         mp_draw.draw_landmarks(
-            image, hand_result,
-            mp_hands.HAND_CONNECTIONS, self.joint_spec, self.finger_spec)
+            image,
+            hand_result,
+            mp_hands.HAND_CONNECTIONS,
+            self.joint_spec,
+            self.finger_spec,
+        )
 
     def find_hands(self, image):
         """TODO"""
@@ -185,13 +206,16 @@ class HandDetector: # KNN
                 continue
 
             pt = hand_result.landmark[0]
-            pt = int(pt.x * width), int(pt.y * height) + 20,
+            pt = (
+                int(pt.x * width),
+                int(pt.y * height) + 20,
+            )
             gestures.append((gesture, pt))
 
         return image, gestures
 
 
-#------------------------------------------------------------------------------
+# ------------------------------------------------------------------------------
 # Hands
 
 DATASET_NAME = "dataset.csv"
@@ -203,11 +227,12 @@ RPS_GESTURE = {
     5: Gesture.spock,
 }
 
+
 def rpsls() -> None:
     """TODO"""
 
     # Streamlit
-    title = st.title("Rock Paper Scissor Spock Lizard")
+    st.title("Rock Paper Scissor Spock Lizard")
     frame = st.image([])
     result = st.empty()
 
@@ -236,5 +261,4 @@ def rpsls() -> None:
 
 
 if __name__ == "__main__":
-    # streamlit run app.py
     rpsls()
