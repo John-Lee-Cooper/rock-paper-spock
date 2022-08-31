@@ -24,7 +24,10 @@ For each gesture the angle between the joints (starting with the wrist) on each 
 It is possible that including the angle between the fingers might improve results (paper vs spock).
 You can use ./train.bat to add additional examples.
 
-_Note: you may have to increase CAMERA in rpsls.py to get your camera to work_
+!["example game"](example.png "example")
+_Figure 1.  Spock vaporizes rock_
+
+Note: you may have to increase CAMERA in rpsls.py to get your camera to work
 
 
 Derived from [Rock paper scissors using #mediapipe and #streamlit python](https://www.youtube.com/watch?v=ee29JMl41Mc)
