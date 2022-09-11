@@ -230,9 +230,11 @@ RPS_GESTURE = {
 
 def rpsls() -> None:
     """TODO"""
+    global CAMERA
 
     # Streamlit
     st.title("Rock Paper Scissor Spock Lizard")
+    CAMERA = st.number_input('Camera', min_value=0, max_value=4, value=0, step=1)
     frame = st.image([])
     result = st.empty()
 
@@ -253,6 +255,7 @@ def rpsls() -> None:
             if winner is not None:
                 x, y = gestures[winner][1]
                 put_text(image, "Winner", (x, y + 70), GREEN)
+                # cv2.imwrite("example.png", cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
 
         frame.image(image)
         result.markdown(text)
