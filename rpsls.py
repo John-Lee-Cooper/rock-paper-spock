@@ -80,7 +80,7 @@ def put_text(image, text, org, color, font_face=FONT, font_scale=2, thickness=3)
 
 def frame_rate(image, pt=(10, 70), color=GREEN):
     """DOCSTRING"""
-    #global PREV_TIME
+    global PREV_TIME
     curr_time = time.time()
     fps = 1 // (curr_time - PREV_TIME)
     PREV_TIME = curr_time
