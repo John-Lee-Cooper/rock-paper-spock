@@ -1,7 +1,8 @@
 """
-TODO
+DOCSTRING
 
-Add angles between fingers
+Todo:
+    Add angles between fingers
 """
 
 import time
@@ -57,7 +58,6 @@ CAMERA = 0
 
 PREV_TIME = 0
 
-FONT = cv2.FONT_HERSHEY_PLAIN
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
 WHITE = 255, 255, 255
@@ -66,6 +66,7 @@ RED = 255, 0, 0
 
 
 def put_text(image, text, org, color, font_face=FONT, font_scale=2, thickness=3):
+    """DOCSTRING"""
     cv2.putText(
         image,
         text=text,
@@ -78,8 +79,8 @@ def put_text(image, text, org, color, font_face=FONT, font_scale=2, thickness=3)
 
 
 def frame_rate(image, pt=(10, 70), color=GREEN):
-    """TODO"""
-    global PREV_TIME
+    """DOCSTRING"""
+    #global PREV_TIME
     curr_time = time.time()
     fps = 1 // (curr_time - PREV_TIME)
     PREV_TIME = curr_time
@@ -87,6 +88,7 @@ def frame_rate(image, pt=(10, 70), color=GREEN):
 
 
 def image_generator():
+    """DOCSTRING"""
     cap = cv2.VideoCapture(CAMERA)
     while cap.isOpened():
         ret, image = cap.read()
@@ -113,6 +115,7 @@ class KNN:
         self.response_dict = response_dict
 
     def find_nearest(self, data):
+        """DOCSTRING"""
         # ret, results, neighbours, dist
         _, results, _, _ = self.knn.findNearest(data, self.k)
         response = int(results[0][0])
@@ -129,17 +132,42 @@ mp_hands = mp.solutions.hands
 
 
 def joint_angles(landmark):
+    """DOCSTRING"""
     joint = np.array([(lm.x, lm.y, lm.z) for lm in landmark])
 
     # Compute angles between joints
 
     # thumb, index, middle, ring, pinky
     parent_index = [0, 1, 2, 3, 0, 5, 6, 7, 0, 9, 10, 11, 0, 13, 14, 15, 0, 17, 18, 19]
-    child_index =  [ 1, 2, 3, 4,  5, 6, 7, 8,  9, 10, 11, 12,  13, 14, 15, 16,  17, 18, 19, 20]
+    child_index_ = [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+    ]
     segment1 = [0, 1, 2, 4, 5, 6, 8, 9, 10, 12, 13, 14, 16, 17, 18]
     segment2 = [1, 2, 3, 5, 6, 7, 9, 10, 11, 13, 14, 15, 17, 18, 19]
+    # Angles between fingers
+    # segment1 += [0, 4, 8, 12]
+    # segment2 += [4, 8, 12, 16]
 
-    v = joint[child_index, :] - joint[parent_index, :]
+    v = joint[child_index_, :] - joint[parent_index, :]
 
     # Normalize v
     v = v / np.linalg.norm(v, axis=1)[:, np.newaxis]
@@ -153,7 +181,7 @@ def joint_angles(landmark):
 
 
 class HandDetector:  # KNN
-    """TODO"""
+    """DOCSTRING"""
 
     def __init__(
         self,
@@ -162,7 +190,6 @@ class HandDetector:  # KNN
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ):
-
         self.hands = mp_hands.Hands(
             static_image_mode=False,
             max_num_hands=max_num_hands,
@@ -170,15 +197,19 @@ class HandDetector:  # KNN
             min_tracking_confidence=min_tracking_confidence,
         )
         self.joint_spec = mp_draw.DrawingSpec(color=RED, thickness=2, circle_radius=6)
-        self.finger_spec = mp_draw.DrawingSpec(color=WHITE, thickness=2, circle_radius=2)
+        self.finger_spec = mp_draw.DrawingSpec(
+            color=WHITE, thickness=2, circle_radius=2
+        )
 
         self.knn = knn
 
     def find_gesture(self, landmark):
+        """DOCSTRING"""
         data = joint_angles(landmark)
         return self.knn.find_nearest(data)
 
     def draw_hand(self, image, hand_result):
+        """DOCSTRING"""
         mp_draw.draw_landmarks(
             image,
             hand_result,
@@ -188,7 +219,7 @@ class HandDetector:  # KNN
         )
 
     def find_hands(self, image):
-        """TODO"""
+        """DOCSTRING"""
 
         hand_results = self.hands.process(image).multi_hand_landmarks
         if hand_results is None:
@@ -198,7 +229,6 @@ class HandDetector:  # KNN
 
         gestures = []
         for hand_result in hand_results:
-
             self.draw_hand(image, hand_result)
 
             gesture = self.find_gesture(hand_result.landmark)
@@ -229,12 +259,12 @@ RPS_GESTURE = {
 
 
 def rpsls() -> None:
-    """TODO"""
+    """DOCSTRING"""
     global CAMERA
 
     # Streamlit
     st.title("Rock Paper Scissor Spock Lizard")
-    CAMERA = st.number_input('Camera', min_value=0, max_value=4, value=0, step=1)
+    CAMERA = st.number_input("Camera", min_value=0, max_value=4, value=0, step=1)
     frame = st.image([])
     result = st.empty()
 
